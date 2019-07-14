@@ -1,0 +1,130 @@
+version: '3'
+
+services:
+  db:
+    image: mariadb
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    restart: always
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=<db_password>
+    env_file:
+      - db.env
+
+  app:
+    build: ./nextcloud
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html
+      - data:/var/www/html/data
+      - config:/var/www/html/config
+    env_file:
+      - db.env
+    depends_on:
+      - db
+
+  cron:
+    build: ./nextcloud
+    restart: always
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+    volumes:
+      - nextcloud:/var/www/html
+      - data:/var/www/html/data
+      - config:/var/www/html/config
+    environment:
+      - RESTIC_REPOSITORY=<restic_backend>
+    env_file:
+      - db.env
+    entrypoint: /cron.sh
+    depends_on:
+      - db
+
+  web:
+    build: ./web
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html:ro
+      - data:/var/www/html/data:ro
+    environment:
+      - VIRTUAL_HOST=<nc_url>
+    depends_on:
+      - app
+    networks:
+      - proxy-tier
+      - default
+
+  proxy:
+    build: ./proxy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      - DEFAULT_HOST=<pihole_gui_url>
+    volumes:
+      - certs:/etc/nginx/certs:ro
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - proxy-tier
+    depends_on:
+      - omgwtfssl
+
+  pihole:
+    image: pihole/pihole:latest
+    restart: always
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+    ports:
+      - '53:53/tcp'
+      - '53:53/udp'
+      - "67:67/udp"
+      - '8053:80/tcp'
+    volumes:
+      - './etc-pihole/:/etc/pihole/'
+      - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - ServerIP=<server_ip>
+      - PROXY_LOCATION=pihole
+      - VIRTUAL_HOST=<pihole_gui_url>
+      - VIRTUAL_PORT=80
+    extra_hosts:
+      - 'pihole <pihole_gui_url>:<server_ip>'
+      - 'nextcloud <nc_url>:<server_ip>'
+    networks:
+      - proxy-tier
+
+  omgwtfssl:
+    image: paulczar/omgwtfssl
+    restart: "no"
+    volumes:
+      - certs:/certs
+    environment:
+      - SSL_SUBJECT=<nc_url>
+      - CA_SUBJECT=<cert_subject>
+      - CA_EXPIRE=3650
+      - SSL_KEY=/certs/<nc_url>.key
+      - SSL_CSR=/certs/<nc_url>.csr
+      - SSL_CERT=/certs/<nc_url>.crt
+      - SSL_EXPIRE=3650
+    networks:
+      - proxy-tier
+
+volumes:
+  db:
+  nextcloud:
+  data:
+  config:
+  certs:
+  vhost.d:
+  html:
+
+networks:
+  proxy-tier:
