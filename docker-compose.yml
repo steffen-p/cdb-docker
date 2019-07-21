@@ -8,7 +8,7 @@ services:
     volumes:
       - db:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=<db_password>
+      - MYSQL_ROOT_PASSWORD=example-pw
     env_file:
       - db.env
 
@@ -34,8 +34,6 @@ services:
       - nextcloud:/var/www/html
       - data:/var/www/html/data
       - config:/var/www/html/config
-    environment:
-      - RESTIC_REPOSITORY=<restic_backend>
     env_file:
       - db.env
     entrypoint: /cron.sh
@@ -49,7 +47,7 @@ services:
       - nextcloud:/var/www/html:ro
       - data:/var/www/html/data:ro
     environment:
-      - VIRTUAL_HOST=<nc_url>
+      - VIRTUAL_HOST=nextcloud.example.lan
     depends_on:
       - app
     networks:
@@ -63,7 +61,7 @@ services:
       - 80:80
       - 443:443
     environment:
-      - DEFAULT_HOST=<pihole_gui_url>
+      - DEFAULT_HOST=pihole.example.lan
     volumes:
       - certs:/etc/nginx/certs:ro
       - vhost.d:/etc/nginx/vhost.d
@@ -91,13 +89,13 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
-      - ServerIP=<server_ip>
+      - ServerIP=192.168.1.132
       - PROXY_LOCATION=pihole
-      - VIRTUAL_HOST=<pihole_gui_url>
+      - VIRTUAL_HOST=pihole.example.lan
       - VIRTUAL_PORT=80
     extra_hosts:
-      - 'pihole <pihole_gui_url>:<server_ip>'
-      - 'nextcloud <nc_url>:<server_ip>'
+      - 'pihole pihole.example.lan:192.168.1.132'
+      - 'nextcloud nextcloud.example.lan:192.168.1.132'
     networks:
       - proxy-tier
 
@@ -107,12 +105,12 @@ services:
     volumes:
       - certs:/certs
     environment:
-      - SSL_SUBJECT=<nc_url>
-      - CA_SUBJECT=<cert_subject>
+      - SSL_SUBJECT=nextcloud.example.lan
+      - CA_SUBJECT=example-cert
       - CA_EXPIRE=3650
-      - SSL_KEY=/certs/<nc_url>.key
-      - SSL_CSR=/certs/<nc_url>.csr
-      - SSL_CERT=/certs/<nc_url>.crt
+      - SSL_KEY=/certs/nextcloud.example.lan.key
+      - SSL_CSR=/certs/nextcloud.example.lan.csr
+      - SSL_CERT=/certs/nextcloud.example.lan.crt
       - SSL_EXPIRE=3650
     networks:
       - proxy-tier
