@@ -15,6 +15,9 @@ services:
   app:
     build: ./nextcloud
     restart: always
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
     volumes:
       - nextcloud:/var/www/html
       - data:/var/www/html/data
