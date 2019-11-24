@@ -53,7 +53,7 @@ cron:
 +      - B2_ACCOUNT_ID=009885347c68e3535000000003
 +      - B2_ACCOUNT_KEY=K00sdfasdfhfkjhsadkjfsomekeyb0
 +      - RESTIC_PASSWORD=Y28uniqeresticrepopassword34234F
-+      - RESTIC_FORGET_ARGS="--prune --keep-last 14 --keep-daily 1"
++      - RESTIC_FORGET_ARGS=--prune --keep-last 7 --keep-monthly 1
      env_file:
        - db.env
      entrypoint: /cron.sh
