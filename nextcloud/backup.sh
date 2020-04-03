@@ -1,7 +1,7 @@
 #!/bin/sh
 
 start=`date +%s`
-OCC=`/var/www/html/occ`
+OCC="/var/www/html/occ"
 
 if [ -z "${RESTIC_REPOSITORY}" ]; then
   echo Restic repo is undifined. Skipping backup.
