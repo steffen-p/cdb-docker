@@ -29,6 +29,7 @@ services:
 
   cron:
     build: ./nextcloud
+    hostname: dachscloud_cron
     restart: always
     dns:
       - 127.0.0.1
@@ -77,6 +78,7 @@ services:
 
   pihole:
     image: pihole/pihole:latest
+    hostname: pihole_container
     restart: always
     dns:
       - 127.0.0.1
